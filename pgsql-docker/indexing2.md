@@ -132,11 +132,11 @@ ORDER BY
     t.table_name ASC
 ;
 -- Output
- table_name | total_size | index_size | table_size | num_rows 
+  table_name | total_size | index_size | table_size | num_rows 
 ------------+------------+------------+------------+----------
  account    | 32 kB      | 16 kB      | 8192 bytes |      100
- post       | 28 MB      | 2208 kB    | 26 MB      |   100000
- thread     | 168 kB     | 40 kB      | 96 kB      |     1000
+ post       | 30 MB      | 2208 kB    | 28 MB      |   100000
+ thread     | 160 kB     | 40 kB      | 88 kB      |     1000
  words      | 10024 kB   | 0 bytes    | 9984 kB    |   235976
 (4 rows)
 
@@ -152,13 +152,13 @@ WHERE account_id = 1
 ;
 
 -- Output
-                                               QUERY PLAN                                               
+                                               QUERY PLAN
 --------------------------------------------------------------------------------------------------------
- Seq Scan on post  (cost=0.00..4584.00 rows=477 width=227) (actual time=0.196..23.706 rows=460 loops=1)
+ Seq Scan on post  (cost=0.00..4822.00 rows=510 width=243) (actual time=0.428..39.322 rows=521 loops=1)
    Filter: (account_id = 1)
-   Rows Removed by Filter: 99540
- Planning Time: 2.675 ms
- Execution Time: 23.767 ms
+   Rows Removed by Filter: 99479
+ Planning Time: 0.124 ms
+ Execution Time: 39.390 ms
 (5 rows)
 
 ```
@@ -171,14 +171,14 @@ SELECT COUNT(*) FROM post
 WHERE account_id = 1;
 
 -- Output
-                                                 QUERY PLAN                                                 
+                                                 QUERY PLAN
 ------------------------------------------------------------------------------------------------------------
- Aggregate  (cost=4585.19..4585.20 rows=1 width=8) (actual time=26.699..26.701 rows=1 loops=1)
-   ->  Seq Scan on post  (cost=0.00..4584.00 rows=477 width=0) (actual time=0.183..26.647 rows=460 loops=1)
+ Aggregate  (cost=4823.27..4823.28 rows=1 width=8) (actual time=32.437..32.438 rows=1 loops=1)
+   ->  Seq Scan on post  (cost=0.00..4822.00 rows=510 width=0) (actual time=0.325..32.368 rows=521 loops=1)
          Filter: (account_id = 1)
-         Rows Removed by Filter: 99540
- Planning Time: 0.266 ms
- Execution Time: 26.752 ms
+         Rows Removed by Filter: 99479
+ Planning Time: 0.110 ms
+ Execution Time: 32.480 ms
 (6 rows)
 
 ```
@@ -193,13 +193,13 @@ WHERE thread_id = 1
 AND visible = TRUE;
 
 -- Output
-                                              QUERY PLAN                                              
+                                              QUERY PLAN
 ------------------------------------------------------------------------------------------------------
- Seq Scan on post  (cost=0.00..4584.00 rows=89 width=227) (actual time=0.433..32.030 rows=49 loops=1)
+ Seq Scan on post  (cost=0.00..4822.00 rows=89 width=243) (actual time=1.811..34.009 rows=43 loops=1)
    Filter: (visible AND (thread_id = 1))
-   Rows Removed by Filter: 99951
- Planning Time: 0.252 ms
- Execution Time: 32.085 ms
+   Rows Removed by Filter: 99957
+ Planning Time: 0.189 ms
+ Execution Time: 34.049 ms
 (5 rows)
 
 ```
@@ -214,14 +214,14 @@ FROM post
 WHERE thread_id = 1 AND visible = TRUE AND account_id = 1;
 
 -- Output
-                                                QUERY PLAN                                                
+                                               QUERY PLAN
 ---------------------------------------------------------------------------------------------------------
- Aggregate  (cost=4834.00..4834.01 rows=1 width=8) (actual time=27.687..27.689 rows=1 loops=1)
-   ->  Seq Scan on post  (cost=0.00..4834.00 rows=1 width=0) (actual time=27.672..27.673 rows=0 loops=1)
+ Aggregate  (cost=5072.00..5072.01 rows=1 width=8) (actual time=23.561..23.562 rows=1 loops=1)
+   ->  Seq Scan on post  (cost=0.00..5072.00 rows=1 width=0) (actual time=23.555..23.555 rows=0 loops=1)
          Filter: (visible AND (thread_id = 1) AND (account_id = 1))
          Rows Removed by Filter: 100000
- Planning Time: 0.344 ms
- Execution Time: 27.778 ms
+ Planning Time: 0.165 ms
+ Execution Time: 23.607 ms
 (6 rows)
 
 
@@ -239,21 +239,21 @@ WHERE thread_id = 1 AND visible = TRUE AND created > NOW() - '1 month'::interval
 ORDER BY created;
 
 -- Output
-                                                       QUERY PLAN                                                       
-------------------------------------------------------------------------------------------------------------------------
- Gather Merge  (cost=5167.37..5167.60 rows=2 width=227) (actual time=19.534..21.779 rows=3 loops=1)
+                                                        QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------
+ Gather Merge  (cost=5405.37..5405.60 rows=2 width=243) (actual time=21.584..25.900 rows=3 loops=1)
    Workers Planned: 2
    Workers Launched: 2
-   ->  Sort  (cost=4167.34..4167.35 rows=1 width=227) (actual time=9.494..9.494 rows=1 loops=3)
+   ->  Sort  (cost=4405.34..4405.35 rows=1 width=243) (actual time=14.281..14.283 rows=1 loops=3)
          Sort Key: created
          Sort Method: quicksort  Memory: 25kB
          Worker 0:  Sort Method: quicksort  Memory: 25kB
          Worker 1:  Sort Method: quicksort  Memory: 25kB
-         ->  Parallel Seq Scan on post  (cost=0.00..4167.33 rows=1 width=227) (actual time=7.572..9.424 rows=1 loops=3)
+         ->  Parallel Seq Scan on post  (cost=0.00..4405.33 rows=1 width=243) (actual time=10.194..14.070 rows=1 loops=3)
                Filter: (visible AND (thread_id = 1) AND (created > (now() - '1 mon'::interval)))
                Rows Removed by Filter: 33332
- Planning Time: 0.225 ms
- Execution Time: 21.817 ms
+ Planning Time: 0.251 ms
+ Execution Time: 25.975 ms
 (13 rows)
 
 ```
@@ -267,6 +267,22 @@ ORDER BY created;
 EXPLAIN ANALYZE
 SELECT * FROM post WHERE account_id = 1; 
 ```
+  table_name | total_size | index_size | table_size | num_rows 
+------------+------------+------------+------------+----------
+ account    | 32 kB      | 16 kB      | 8192 bytes |      100
+ post       | 30 MB      | 2208 kB    | 28 MB      |   100000
+ thread     | 160 kB     | 40 kB      | 88 kB      |     1000
+ words      | 10024 kB   | 0 bytes    | 9984 kB    |   235976
+(4 rows)
+
+                                               QUERY PLAN
+--------------------------------------------------------------------------------------------------------
+ Seq Scan on post  (cost=0.00..4822.00 rows=510 width=243) (actual time=0.275..31.470 rows=521 loops=1)
+   Filter: (account_id = 1)
+   Rows Removed by Filter: 99479
+ Planning Time: 0.158 ms
+ Execution Time: 31.554 ms
+(5 rows)
 
 ### Case B Single Index
 
@@ -275,6 +291,25 @@ CREATE INDEX post_account_id_idx ON post(account_id);
 
 EXPLAIN ANALYZE
 SELECT * FROM post WHERE account_id = 1; 
+table_name | total_size | index_size | table_size | num_rows
+------------+------------+------------+------------+----------
+ account    | 32 kB      | 16 kB      | 8192 bytes |      100
+ post       | 31 MB      | 2928 kB    | 28 MB      |   100000
+ thread     | 160 kB     | 40 kB      | 88 kB      |     1000
+ words      | 10024 kB   | 0 bytes    | 9984 kB    |   235976
+(4 rows)
+
+                                                          QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on post  (cost=8.24..1399.69 rows=510 width=243) (actual time=0.372..1.676 rows=521 loops=1)
+   Recheck Cond: (account_id = 1)
+   Heap Blocks: exact=488
+   ->  Bitmap Index Scan on post_account_id_idx  (cost=0.00..8.12 rows=510 width=0) (actual time=0.183..0.184 rows=521 loops=1)
+         Index Cond: (account_id = 1)
+ Planning Time: 0.503 ms
+ Execution Time: 1.804 ms
+(7 rows)
+
 ```
 
 ### Case C Composite Index
@@ -286,6 +321,14 @@ CREATE INDEX post_thread_id_account_id_idx ON post(thread_id, account_id);
 
 EXPLAIN ANALYZE
 SELECT * FROM post WHERE thread_id = 1 AND account_id = 1;
+                                                              QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using post_thread_id_account_id_idx on post  (cost=0.29..8.31 rows=1 width=243) (actual time=0.060..0.060 rows=0 loops=1)
+   Index Cond: ((thread_id = 1) AND (account_id = 1))
+ Planning Time: 0.554 ms
+ Execution Time: 0.092 ms
+(4 rows)
+
 ```
 
 ### Case D Full Composite Index
@@ -298,6 +341,14 @@ CREATE INDEX post_thread_id_account_id_visible_idx ON post(thread_id, account_id
 EXPLAIN ANALYZE
 SELECT * FROM post WHERE thread_id = 1 AND account_id = 1 AND visible = TRUE;
 ```
+                                                                 QUERY PLAN
+----------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using post_thread_id_account_id_visible_idx on post  (cost=0.42..8.44 rows=1 width=243) (actual time=0.051..0.052 rows=0 loops=1)
+   Index Cond: ((thread_id = 1) AND (account_id = 1) AND (visible = true))
+ Planning Time: 0.549 ms
+ Execution Time: 0.083 ms
+(4 rows)
+
 
 ### Case E Partial Index
 
@@ -309,6 +360,16 @@ CREATE INDEX post_thread_id_visible_idx ON post(thread_id) WHERE visible = TRUE;
 EXPLAIN ANALYZE
 SELECT * FROM post WHERE thread_id = 1 AND visible = TRUE;
 ```
+                                                             QUERY PLAN
+-------------------------------------------------------------------------------------------------------------------------------------
+ Bitmap Heap Scan on post  (cost=4.98..316.66 rows=89 width=243) (actual time=0.067..0.249 rows=43 loops=1)
+   Recheck Cond: ((thread_id = 1) AND visible)
+   Heap Blocks: exact=43
+   ->  Bitmap Index Scan on post_thread_id_visible_idx  (cost=0.00..4.96 rows=89 width=0) (actual time=0.043..0.044 rows=43 loops=1)
+         Index Cond: (thread_id = 1)
+ Planning Time: 0.400 ms
+ Execution Time: 0.285 ms
+(7 rows)
 
 ### Case F Sorting
 
@@ -321,3 +382,11 @@ EXPLAIN ANALYZE
 SELECT * FROM post WHERE thread_id = 1 ORDER BY created DESC LIMIT 10;
 
 ```
+                                                                QUERY PLAN
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.42..40.59 rows=10 width=243) (actual time=0.058..0.087 rows=10 loops=1)
+   ->  Index Scan using post_thread_id_create_idx on post  (cost=0.42..394.09 rows=98 width=243) (actual time=0.055..0.082 rows=10 loops=1)
+         Index Cond: (thread_id = 1)
+ Planning Time: 0.564 ms
+ Execution Time: 0.117 ms
+(5 rows)
